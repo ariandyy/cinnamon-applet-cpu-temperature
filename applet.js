@@ -126,7 +126,10 @@ MyApplet.prototype = {
 		    }
 		}
 
-		this.set_applet_label(this.title);
+        // da BOMB
+		//this.set_applet_label(this.title);
+		this.set_applet_label("Load: "+this._getLoadAvg()+" @ "+this.title);
+        
         this.menu.box.get_children().forEach(function(c) {
             c.destroy()
         });
@@ -171,6 +174,15 @@ MyApplet.prototype = {
 		    section.addMenuItem(item);
 		    return section;
 		},
+
+    _getLoadAvg: function(){
+        let load_file = '/proc/loadavg';
+        let strLoad = '';
+        let tmpContent = GLib.file_get_contents(load_file);
+        tmpContent = tmpContent[1].toString().split(' ');
+        strLoad = tmpContent[0]+" "+tmpContent[1]+" "+tmpContent[2];
+        return strLoad;
+    },
 
     _findTemperatureFromFiles: function(){
         let info = new Array();
