@@ -43,7 +43,9 @@ MyApplet.prototype = {
             style_class: "temperature-label"
         });
 
-        
+		this.gtopMem = new GTop.glibtop_mem();
+        this.memInfo = [0,0,0,0];
+
 		try {
 
 			// Create the popup menu
@@ -141,11 +143,22 @@ MyApplet.prototype = {
 
         // da BOMB
 		//this.set_applet_label(this.title);
+        //taken from DataProvider.js
         //TODO: make the title as variable!
+        this._getMemInfo();
+        let memTot = this.gtopMem.total;
+
         let textLabel = '';
         textLabel += "Load: "+this._getLoadAvg(1);
-        textLabel += "| Temp: "+this.title;
-        textLabel += "| Mem: ";
+        textLabel += " | Temp: "+this.title;
+        //textLabel += " | Mem";
+        //textLabel += " "+Math.round(100*this.memInfo[0]).toString()+"% used";
+        //textLabel += " "+Math.round(100*this.memInfo[1]).toString()+"% cached";
+        //textLabel += " "+Math.round(100*this.memInfo[3]).toString()+"% free";
+        textLabel += " | Mem";
+        textLabel += " "+(this.memInfo[0]*memTot/1024/1024/1024).toFixed(1)+"GB used";
+        textLabel += " "+(this.memInfo[1]*memTot/1024/1024/1024).toFixed(1)+"GB cached";
+        textLabel += " "+(this.memInfo[3]*memTot/1024/1024/1024).toFixed(1)+"GB free";
 		this.set_applet_label(textLabel);
         
         this.menu.box.get_children().forEach(function(c) {
@@ -178,7 +191,7 @@ MyApplet.prototype = {
 		this.menu.addMenuItem(section);
 
         //update every 5 seconds
-		Mainloop.timeout_add(5000, Lang.bind(this, this._update_temp));
+		Mainloop.timeout_add(1000, Lang.bind(this, this._update_temp));
     
 	},
 	
@@ -192,6 +205,21 @@ MyApplet.prototype = {
 		    section.addMenuItem(item);
 		    return section;
 		},
+
+    _getMemInfo: function(){
+        GTop.glibtop_get_mem(this.gtopMem);
+        
+        var unAvailableForUse = (this.gtopMem.used - this.gtopMem.buffer - this.gtopMem.cached)/this.gtopMem.total;
+		var cached = this.gtopMem.cached/this.gtopMem.total;
+		var buffer = this.gtopMem.buffer/this.gtopMem.total;
+		var free = this.gtopMem.free/this.gtopMem.total;
+
+		this.memInfo = [unAvailableForUse , cached, buffer, free]; //should add up to 1
+		
+		//return [this.memusage];
+		return this.memInfo;
+
+    },
 
     _getLoadAvg: function(count){
         // count: 1-3
