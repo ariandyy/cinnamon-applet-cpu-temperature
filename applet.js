@@ -1,9 +1,22 @@
+/**
+ * TODO:
+ *   - GTop dependency check
+ *   - variable title into variables
+ *   - separator as well
+ *   - new _update function
+ *   - refactor _update_temp
+ *   - use tooltip from system-monitor@pixunil or multicore-sys-monitor
+ *
+ *
+ */
+
 const St = imports.gi.St;
 const Lang = imports.lang;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 const Main = imports.ui.main;
 const GLib = imports.gi.GLib;
+const GTop = imports.gi.GTop;
 const Util = imports.misc.util;
 const Mainloop = imports.mainloop;
 const Applet = imports.ui.applet;
@@ -128,7 +141,12 @@ MyApplet.prototype = {
 
         // da BOMB
 		//this.set_applet_label(this.title);
-		this.set_applet_label("Load: "+this._getLoadAvg()+" @ "+this.title);
+        //TODO: make the title as variable!
+        let textLabel = '';
+        textLabel += "Load: "+this._getLoadAvg(1);
+        textLabel += "| Temp: "+this.title;
+        textLabel += "| Mem: ";
+		this.set_applet_label(textLabel);
         
         this.menu.box.get_children().forEach(function(c) {
             c.destroy()
@@ -175,13 +193,17 @@ MyApplet.prototype = {
 		    return section;
 		},
 
-    _getLoadAvg: function(){
+    _getLoadAvg: function(count){
+        // count: 1-3
+        count = count || 3;
         let load_file = '/proc/loadavg';
         let strLoad = '';
         let tmpContent = GLib.file_get_contents(load_file);
         tmpContent = tmpContent[1].toString().split(' ');
-        strLoad = tmpContent[0]+" "+tmpContent[1]+" "+tmpContent[2];
-        return strLoad;
+        for (i=0;i<count;i++){
+            strLoad += tmpContent[0]+" ";
+        }
+        return strLoad.trim();
     },
 
     _findTemperatureFromFiles: function(){
